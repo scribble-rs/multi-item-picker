@@ -11,12 +11,23 @@ class MultiItemPicker extends HTMLElement {
             -webkit-appearance: textfield;
             display: flex;
             flex-direction: row;
-            padding: 5px 0 5px 0;
+            padding: 3px 0 3px 0;
         }
-
+        
         .multi-item-picker-input {
             border: none;
             flex: 1;
+            padding: 2px 0 2px 0;
+        }
+        
+        /** Since we can't use the default border, we have a focus alternative.
+         While this sin't perfect, as it disturbs the default look and feel, I've
+         sadly not found any better way. */
+        .multi-item-picker-input:focus {
+            border-width: 0 0 2px 0;
+            border-style: solid;
+            border-color: #2196F3;
+            padding: 2px 0 0 0;
         }
 
         .multi-item-picker-selected-items {
@@ -26,8 +37,8 @@ class MultiItemPicker extends HTMLElement {
         }
 
         .multi-item-picker-selected-item {
-            background-color: lightgray;
-            padding: 2px 10px 2px 10px;
+            background-color: #e3e5e8;
+            padding: 0.1rem 0.3rem 0.1rem 0.3rem;
             /* We don't want the items growing inside of the parent, as the text input should be the only growing components.*/
             flex: 0;
             /** Since each item has a button to unselect it, each item needs a horizontal layout (Text X-Button). */
@@ -35,13 +46,21 @@ class MultiItemPicker extends HTMLElement {
             flex-direction: row;
         }
 
-        .multi-item-picker-selected-item + .multi-item-picker-selected-item {
-            margin-left: 10px;
+        .multi-item-picker-selected-item {
+            margin-right: 10px;
         }
 
         .multi-item-picker-selected-item-delete-button {
-            margin-left: 5px;
-            padding: 0;
+            margin-left: 0.1rem;
+            padding: 0 0.2rem 0 0.2rem;
+            vertical-align: center;
+            text-align: center;
+            font-family: Arial;
+            cursor: pointer;
+        }
+        
+        .multi-item-picker-selected-item-delete-button:hover {
+            background-color: lightgray;
         }
         `
         shadow.appendChild(style);
