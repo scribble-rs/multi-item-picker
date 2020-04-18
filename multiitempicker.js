@@ -84,9 +84,22 @@ class MultiItemPicker extends HTMLElement {
             for (let i = 0; i < demoValues.length; i++) {
                 let demoValue = demoValues[i];
                 if (input.value === demoValue) {
-                    const newSelectedItem = document.createElement("span");
+                    const newSelectedItem = document.createElement("div");
                     newSelectedItem.classList.add("multi-item-picker-selected-item");
-                    newSelectedItem.innerText = demoValue;
+                    newSelectedItem.id = demoValue;
+
+                    const text = document.createElement("span");
+                    text.innerText = demoValue;
+                    newSelectedItem.appendChild(text);
+
+                    const deleteButton = document.createElement("x")
+                    deleteButton.innerText = "x";
+                    deleteButton.classList.add("multi-item-picker-selected-item-delete-button")
+                    deleteButton.addEventListener("click", function () {
+                        selectedItemsWrapper.removeChild(shadow.getElementById(demoValue));
+                    }, true);
+                    newSelectedItem.appendChild(deleteButton);
+
                     selectedItemsWrapper.appendChild(newSelectedItem);
                     input.value = "";
                     break;
@@ -96,7 +109,8 @@ class MultiItemPicker extends HTMLElement {
 
         input.addEventListener("keydown", function (event) {
             if (input.value === "" && event.code === "Backspace" && selectedItemsWrapper.childElementCount >= 1) {
-                input.value = selectedItemsWrapper.lastChild.textContent;
+                //FIXME Get by ID instead?
+                input.value = selectedItemsWrapper.lastChild.firstChild.textContent;
                 selectedItemsWrapper.removeChild(selectedItemsWrapper.lastChild);
             }
         }, false);
