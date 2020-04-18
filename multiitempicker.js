@@ -44,6 +44,7 @@ class MultiItemPicker extends HTMLElement {
             /** Since each item has a button to unselect it, each item needs a horizontal layout (Text X-Button). */
             display: flex;
             flex-direction: row;
+            white-space:nowrap;
         }
 
         .multi-item-picker-selected-item {
@@ -76,46 +77,76 @@ class MultiItemPicker extends HTMLElement {
         const input = document.createElement('input');
         input.type = "text";
         input.classList.add('multi-item-picker-input');
-        input.value = "test";
+        input.value = "ab";
 
-        const demoValues = ["abc", "def", "ghi"]
+        //This is an array function so that we can access the enclosing class state.
+        input.addEventListener("input", () => {
+            for (let i = 0; i < this.childNodes.length; i++) {
+                let item = this.childNodes.item(i);
+                //Since any node type could be inserted by the user, we only look for "item" nodes
+                if (item.nodeName !== "ITEM") {
+                    continue;
+                }
 
-        input.addEventListener("input", function () {
-            for (let i = 0; i < demoValues.length; i++) {
-                let demoValue = demoValues[i];
-                if (input.value === demoValue) {
-                    const newSelectedItem = document.createElement("div");
-                    newSelectedItem.classList.add("multi-item-picker-selected-item");
-                    newSelectedItem.id = demoValue;
+                let itemText = item.innerText;
+                if (input.value === itemText) {
+                    this.addNode(selectedItemsWrapper, shadow, item, itemText);
 
-                    const text = document.createElement("span");
-                    text.innerText = demoValue;
-                    newSelectedItem.appendChild(text);
-
-                    const deleteButton = document.createElement("x")
-                    deleteButton.innerText = "x";
-                    deleteButton.classList.add("multi-item-picker-selected-item-delete-button")
-                    deleteButton.addEventListener("click", function () {
-                        selectedItemsWrapper.removeChild(shadow.getElementById(demoValue));
-                    }, true);
-                    newSelectedItem.appendChild(deleteButton);
-
-                    selectedItemsWrapper.appendChild(newSelectedItem);
                     input.value = "";
                     break;
                 }
+
+                //TODO Popup
             }
         }, false)
 
         input.addEventListener("keydown", function (event) {
             if (input.value === "" && event.code === "Backspace" && selectedItemsWrapper.childElementCount >= 1) {
                 //FIXME Get by ID instead?
+                //TODO Remove "selected" attribute of corresponding item.
                 input.value = selectedItemsWrapper.lastChild.firstChild.textContent;
                 selectedItemsWrapper.removeChild(selectedItemsWrapper.lastChild);
             }
         }, false);
 
         wrapper.appendChild(input);
+
+        //Add initial elements for pre-selected item nodes
+        for (let i = 0; i < this.childNodes.length; i++) {
+            let item = this.childNodes.item(i);
+            //Since any node type could be inserted by the user, we only look for "item" nodes
+            if (item.nodeName !== "ITEM") {
+                continue;
+            }
+
+            let selectedAttribute = item.getAttribute("selected");
+            if (selectedAttribute != null) {
+                this.addNode(selectedItemsWrapper, shadow, item, item.innerText);
+            }
+        }
+    }
+
+    addNode(selectedItemsWrapper, shadow, item, itemText) {
+        item.setAttribute("selected", "");
+        const newSelectedItem = document.createElement("div");
+        newSelectedItem.classList.add("multi-item-picker-selected-item");
+        newSelectedItem.id = itemText;
+
+        const text = document.createElement("span");
+        text.innerText = itemText;
+        newSelectedItem.appendChild(text);
+
+        const deleteButton = document.createElement("span")
+        deleteButton.innerText = "x";
+        //FIXME Can't get tooltip to work, not sure why.
+        deleteButton.classList.add("multi-item-picker-selected-item-delete-button")
+        deleteButton.addEventListener("click", function () {
+            //TODO Remove "selected" attribute of corresponding item.
+            selectedItemsWrapper.removeChild(shadow.getElementById(itemText));
+        }, true);
+        newSelectedItem.appendChild(deleteButton);
+
+        selectedItemsWrapper.appendChild(newSelectedItem);
     }
 }
 
