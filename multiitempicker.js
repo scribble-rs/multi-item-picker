@@ -83,7 +83,8 @@ class MultiItemPicker extends HTMLElement {
         this.input.classList.add('multi-item-picker-input');
         this.input.value = "ab";
 
-        //This is an array function so that we can access the enclosing class state.
+        //If the current input matches any of the unselected items, we
+        //select that item and clear the input.
         this.input.addEventListener("input", () => {
             let match = this.getItem(this.input.value);
             if (match !== null) {
@@ -96,6 +97,9 @@ class MultiItemPicker extends HTMLElement {
             }
         }, false)
 
+        //This will delete the last item if backspace is hit when there's no text content.
+        //The content of the last item will then be moved to the input field. It's basically
+        //"edit the last item".
         this.input.addEventListener("keydown", (event) => {
             if (this.input.value === "" && event.code === "Backspace" && this.selectedItemsWrapper.childElementCount >= 1) {
                 let textNode = this.selectedItemsWrapper.lastChild.firstChild;
