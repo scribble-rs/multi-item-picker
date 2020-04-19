@@ -1,7 +1,11 @@
 class MultiItemPicker extends HTMLElement {
+    shadow
+    selectedItemsWrapper
+    input
+
     constructor() {
         super();
-        const shadow = this.attachShadow({mode: 'open'});
+        this.shadow = this.attachShadow({mode: 'open'});
         this.classList.add('multi-item-picker');
 
         const style = document.createElement("style")
@@ -64,52 +68,47 @@ class MultiItemPicker extends HTMLElement {
             background-color: lightgray;
         }
         `
-        shadow.appendChild(style);
+        this.shadow.appendChild(style);
 
         const wrapper = document.createElement('div');
         wrapper.classList.add('multi-item-picker');
-        shadow.appendChild(wrapper)
+        this.shadow.appendChild(wrapper)
 
-        const selectedItemsWrapper = document.createElement('div');
-        selectedItemsWrapper.classList.add('multi-item-picker-selected-items');
-        wrapper.appendChild(selectedItemsWrapper);
+        this.selectedItemsWrapper = document.createElement('div');
+        this.selectedItemsWrapper.classList.add('multi-item-picker-selected-items');
+        wrapper.appendChild(this.selectedItemsWrapper);
 
-        const input = document.createElement('input');
-        input.type = "text";
-        input.classList.add('multi-item-picker-input');
-        input.value = "ab";
+        this.input = document.createElement('input');
+        this.input.type = "text";
+        this.input.classList.add('multi-item-picker-input');
+        this.input.value = "ab";
 
         //This is an array function so that we can access the enclosing class state.
-        input.addEventListener("input", () => {
-            for (let i = 0; i < this.childNodes.length; i++) {
-                let item = this.childNodes.item(i);
-                //Since any node type could be inserted by the user, we only look for "item" nodes
-                if (item.nodeName !== "ITEM") {
-                    continue;
+        this.input.addEventListener("input", () => {
+            let match = this.getItem(this.input.value);
+            if (match !== null) {
+                let selectedAttribute = match.getAttribute("selected");
+                if (selectedAttribute !== "") {
+                    this.addNode(match, match.innerText);
+
+                    this.input.value = "";
                 }
-
-                let itemText = item.innerText;
-                if (input.value === itemText) {
-                    this.addNode(selectedItemsWrapper, shadow, item, itemText);
-
-                    input.value = "";
-                    break;
-                }
-
-                //TODO Popup
             }
         }, false)
 
-        input.addEventListener("keydown", function (event) {
-            if (input.value === "" && event.code === "Backspace" && selectedItemsWrapper.childElementCount >= 1) {
-                //FIXME Get by ID instead?
-                //TODO Remove "selected" attribute of corresponding item.
-                input.value = selectedItemsWrapper.lastChild.firstChild.textContent;
-                selectedItemsWrapper.removeChild(selectedItemsWrapper.lastChild);
+        this.input.addEventListener("keydown", (event) => {
+            if (this.input.value === "" && event.code === "Backspace" && this.selectedItemsWrapper.childElementCount >= 1) {
+                let textNode = this.selectedItemsWrapper.lastChild.firstChild;
+                this.input.value = textNode.textContent;
+                let match = this.getItem(textNode.textContent);
+                if (match !== null) {
+                    match.removeAttribute("selected");
+                }
+                this.selectedItemsWrapper.removeChild(this.selectedItemsWrapper.lastChild);
             }
         }, false);
 
-        wrapper.appendChild(input);
+        wrapper.appendChild(this.input);
 
         //Add initial elements for pre-selected item nodes
         for (let i = 0; i < this.childNodes.length; i++) {
@@ -121,12 +120,28 @@ class MultiItemPicker extends HTMLElement {
 
             let selectedAttribute = item.getAttribute("selected");
             if (selectedAttribute != null) {
-                this.addNode(selectedItemsWrapper, shadow, item, item.innerText);
+                this.addNode(item, item.innerText);
             }
         }
     }
 
-    addNode(selectedItemsWrapper, shadow, item, itemText) {
+    getItem(itemText) {
+        for (let i = 0; i < this.childNodes.length; i++) {
+            let item = this.childNodes.item(i);
+            //Since any node type could be inserted by the user, we only look for "item" nodes
+            if (item.nodeName !== "ITEM") {
+                continue;
+            }
+
+            if (item.innerText === itemText) {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    addNode(item, itemText) {
         item.setAttribute("selected", "");
         const newSelectedItem = document.createElement("div");
         newSelectedItem.classList.add("multi-item-picker-selected-item");
@@ -140,13 +155,19 @@ class MultiItemPicker extends HTMLElement {
         deleteButton.innerText = "x";
         //FIXME Can't get tooltip to work, not sure why.
         deleteButton.classList.add("multi-item-picker-selected-item-delete-button")
-        deleteButton.addEventListener("click", function () {
-            //TODO Remove "selected" attribute of corresponding item.
-            selectedItemsWrapper.removeChild(shadow.getElementById(itemText));
+        deleteButton.addEventListener("click", () => {
+            let match = this.getItem(itemText);
+            if (match !== null) {
+                match.removeAttribute("selected");
+            }
+            this.selectedItemsWrapper.removeChild(this.shadow.getElementById(itemText));
+
+            //Since not having focus is useless, we focus the input again.
+            this.input.focus();
         }, true);
         newSelectedItem.appendChild(deleteButton);
 
-        selectedItemsWrapper.appendChild(newSelectedItem);
+        this.selectedItemsWrapper.appendChild(newSelectedItem);
     }
 }
 
